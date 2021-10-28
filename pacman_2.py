@@ -4,6 +4,8 @@
 ##################################################################################################################
 import pygame as pg
 
+pg.init()
+
 # Constantes
 AMARELO = (255, 255, 0)
 AZUL = (0, 0, 255)
@@ -12,13 +14,19 @@ FPS = 60
 TELA_X = 800
 TELA_Y = 600
 VELOCIDADE = 1
+###################################################################################################################
+
+# Variaveis globais
+fonte = pg.font.SysFont("arial", 30, True, False)
 
 
 #################################################################################################################
 # Classes
 class Cenario:
-    def __init__(self, tamanho):
+    def __init__(self, tamanho, pac):
+        self.pacman = pac
         self.tamanho = tamanho
+        self.pontos = 0
         self.matriz = [
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
             [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
@@ -51,6 +59,11 @@ class Cenario:
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
         ]
 
+    def pintar_pontos(self, tela):
+        pontos_x = 30 * self.tamanho
+        img_pontos = fonte.render("Pontos: {}".format(self.pontos), True, AZUL)
+        tela.blit(img_pontos, (pontos_x, 50))
+
     def pintar_linha(self, tela, numero_linha, linha):
         for numero_coluna, coluna in enumerate(linha):
             x = numero_coluna * self.tamanho
@@ -66,6 +79,17 @@ class Cenario:
     def pintar(self, tela):
         for numero_linha, linha in enumerate(self.matriz):
             self.pintar_linha(tela, numero_linha, linha)
+        self.pintar_pontos(tela)
+
+    def calcular_regras(self):
+        col = self.pacman.coluna_intencao
+        lin = self.pacman.linha_intencao
+        if 0 <= col < 28 and 0 <= lin < 29:
+            if self.matriz[lin][col] != 2:
+                self.pacman.aceitar_movimento()
+                if self.matriz[lin][col] == 1:
+                    self.pontos += 1
+                    self.matriz[lin][col] = 0
 
 
 class Pacman:
@@ -78,10 +102,12 @@ class Pacman:
         self.vel_x = 0
         self.vel_y = 0
         self.raio = self.tamanho // 2
+        self.coluna_intencao = self.coluna
+        self.linha_intencao = self.linha
 
     def calcular_regras(self):
-        self.coluna = self.coluna + self.vel_x
-        self.linha = self.linha + self.vel_y
+        self.coluna_intencao = self.coluna + self.vel_x
+        self.linha_intencao = self.linha + self.vel_y
         self.centro_x = int(self.coluna * self.tamanho + self.raio)
         self.centro_y = int(self.linha * self.tamanho + self.raio)
 
@@ -124,6 +150,11 @@ class Pacman:
                 elif e.key == pg.K_DOWN:
                     self.vel_y = 0
 
+    def aceitar_movimento(self):
+        self.linha = self.linha_intencao
+        self.coluna = self.coluna_intencao
+
+    # Função para movimentar o pacman com o mouse
     # def processar_eventos_mouse(self, eventos):
     #    delay = 40
     #    for e in eventos:
@@ -136,23 +167,23 @@ class Pacman:
 #################################################################################################################
 # Função onde o jogo ocorre
 def pacman():
-    # criando o objeto pacman
     size = TELA_Y // 30
-
+    # criando o objeto pacman
     pacman = Pacman(size)
-    cenario = Cenario(size)
+    cenario = Cenario(size, pacman)
 
-    pg.init()
     tela = pg.display.set_mode((TELA_X, TELA_Y), 0)
     jogando = True
 
     # loop principal do jogo
     while jogando:
 
+        pacman.calcular_regras()
+        cenario.calcular_regras()
+
         tela.fill(PRETO)
         cenario.pintar(tela)
         pacman.pintar(tela)
-        pacman.calcular_regras()
         pg.display.update()
         pg.time.delay(100)
 

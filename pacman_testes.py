@@ -55,6 +55,11 @@ def pacman():
     pg.init()
     #############################################################################################################
     pacman = Pacman()
+    pontos = 10
+    texto = "Pontos: {}".format(pontos)
+
+    fonte = pg.font.SysFont("arial", 48, True, False)
+    imagem_texto = fonte.render(texto, True, (AMARELO))
 
     pg.init()
     tela = pg.display.set_mode((800, 600), 0)
@@ -63,8 +68,9 @@ def pacman():
     # loop principal do jogo
     while jogando:
 
-        tela.fill(PRETO)
-        pacman.pintar(tela)
+        tela.blit(imagem_texto, (100, 100))
+        #tela.fill(PRETO)
+        #pacman.pintar(tela)
         pacman.calcular_regras()
         pg.display.update()
 
